@@ -512,10 +512,6 @@ class Importer:
        initrd = None
        kernel = None
 
-       # Windows Variables
-       startrom = None
-       setupldr = None
-
        for x in fnames:
 
            fullname = os.path.join(dirname,x)
@@ -532,10 +528,6 @@ class Importer:
 
            if ( x.startswith("vmlinu") or x.startswith("kernel.img") or x.startswith("linux") ) and x.find("initrd") == -1:
                kernel = os.path.join(dirname,x)
-           if x.lower().startswith("startrom.n1_"):
-               startrom = os.path.join(dirname,x)
-           if x.lower().startswith("setupldr.ex_"):
-               setupldr = os.path.join(dirname,x)
            if initrd is not None and kernel is not None and dirname.find("isolinux") == -1:
                adtl = self.add_entry(dirname,kernel,initrd)
                if adtl != None:
@@ -543,10 +535,6 @@ class Importer:
                    # Not resetting these values causes problems importing debian media because there are remaining items in fnames
                    initrd = None
                    kernel = None
-           elif startrom is not None and setupldr is not None:
-               self.add_win_entry(dirname,startrom,setupldr)
-               startrom = None
-               setupldr = None
    
    # ========================================================================
 
@@ -683,100 +671,6 @@ class Importer:
 
    # ========================================================================
 
-   def add_win_entry(self, dirname, startrom, setupldr):
-
-       proposed_name = self.get_proposed_name(dirname)
-       proposed_arch = self.get_proposed_arch(dirname)
-       if self.arch and proposed_arch and self.arch != proposed_arch:
-           raise CX(_("Arch from pathname (%s) does not match with supplied one %s")%(proposed_arch,self.arch))
-
-       importer = import_factory(dirname,self.path,self.breed)
-
-       #archs = importer.learn_arch_from_tree()
-       #if self.arch and self.arch not in archs:
-       #    raise CX(_("Given arch (%s) not found on imported tree %s")%(self.arch,importer.get_pkgdir()))
-       #if proposed_arch:
-       #    if proposed_arch not in archs:
-       #        print _("Warning: arch from pathname (%s) not found on imported tree %s") % (proposed_arch,importer.get_pkgdir())
-       #        return
-       #
-       #    archs = [ proposed_arch ]
-
-       archs = [ proposed_arch ]
-
-       if len(archs)>1:
-           print _("- Warning : Multiple archs found : %s") % (archs)
-
-       distros_added = []
-
-       for pxe_arch in archs:
-
-           name = proposed_name + "-" + pxe_arch
-           existing_distro = self.distros.find(name=name)
-
-           if existing_distro is not None:
-               print _("- warning: skipping import, as distro name already exists: %s") % name
-               continue
-
-           else:
-               print _("- creating new distro: %s") % name
-               distro = self.config.new_distro()
-
-           distro.set_name(name)
-           distro.set_kernel(startrom)
-           distro.set_initrd(setupldr)
-           distro.set_arch(pxe_arch)
-           distro.set_breed(importer.breed)
-           distro.source_repos = []
-
-           # Create the directory in bootloc to bind-mount to
-           # and excute the bind-mount there
-           tld = os.path.normpath(os.path.join(dirname,'..'))
-           utils.mkdir(os.path.join(utils.tftpboot_location(),name))
-           utils.bindmount(tld, os.path.join(utils.tftpboot_location(),name))
-
-           # Create the directories for extra OEM drivers
-           # $oem$/$1/Drivers/NIC
-           #                 /Video
-           #                 /Sound
-           #                 /Other
-           utils.mkdir(os.path.join(tld,'$oem$','$1','Drivers','NIC'))
-           utils.mkdir(os.path.join(tld,'$oem$','$1','Drivers','Video'))
-           utils.mkdir(os.path.join(tld,'$oem$','$1','Drivers','Sound'))
-           utils.mkdir(os.path.join(tld,'$oem$','$1','Drivers','Other'))
-
-           self.distros.add(distro,save=True)
-           distros_added.append(distro)
-
-           existing_profile = self.profiles.find(name=name)
-
-           # see if the profile name is already used, if so, skip it and
-           # do not modify the existing profile
-
-           if existing_profile is None:
-               print _("- creating new profile: %s") % name
-               profile = self.config.new_profile()
-           else:
-               print _("- skipping existing profile, name already exists: %s") % name
-               continue
-
-           # save our minimal profile which just points to the distribution and a good
-           # default answer file
-
-           profile.set_name(name)
-           profile.set_distro(name)
-           if self.kickstart_file:
-               profile.set_kickstart(self.kickstart_file)
-
-           # save our new profile to the collection
-
-           self.profiles.add(profile,save=True)
-
-       self.api.serialize()
-       return distros_added
-
-   # ========================================================================
-
    def get_proposed_name(self,dirname):
 
        """
@@ -874,9 +768,7 @@ def guess_breed(kerneldir,path,cli_breed):
        [ 'Fedora'      , "redhat" ],
        [ 'Server'      , "redhat" ],
        [ 'Client'      , "redhat" ],
-       # FIXME : current debian mini isos do have a setup.exe
        [ 'isolinux.bin', None ],
-       [ 'setup.exe'   , "windows" ],
     ]
     guess = None
 
@@ -939,8 +831,6 @@ def import_factory(kerneldir,path,cli_breed):
         return DebianImporter(rootdir)
     elif breed == "ubuntu":
         return UbuntuImporter(rootdir)
-    elif breed == "windows":
-        return WindowsImporter(rootdir)
     elif breed:
         raise CX(_("Unknown breed %s")%breed)
     else:
@@ -1038,7 +928,7 @@ class RedHatImporter ( BaseImporter ) :
 
    def __init__(self,(rootdir,pkgdir)):
        self.breed = "redhat"
-       self.ks = "/etc/cobbler/default.ks"
+       self.ks = "/var/lib/cobbler/kickstarts/default.ks"
        self.rootdir = rootdir
        self.pkgdir = pkgdir
 
@@ -1124,6 +1014,8 @@ class RedHatImporter ( BaseImporter ) :
            discinfo = open("%s/.discinfo" % base, "r")
            datestamp = discinfo.read().split("\n")[0]
            discinfo.close()
+       else:
+           return 0
        return float(datestamp)
 
    def set_variance(self, flavor, major, minor, arch):
@@ -1328,22 +1220,3 @@ class UbuntuImporter ( DebianImporter ) :
        os_version = dist_names[dist_vers]
 
        return os_version , "/var/lib/cobbler/kickstarts/sample.seed"
-
-
-class WindowsImporter( BaseImporter ):
-   def __init__(self,(rootdir,pkgdir)):
-       self.breed = "windows"
-       # Is there any file similar to kickstart for windows ?
-       self.ks = None
-       self.rootdir = rootdir
-       self.pkgdir = "i386"
- 
-   def set_variance(self, flavor, major, minor, arch):
-       # TODO: figure out how to determine if this media is SP1/SP2/etc.
-       # Assuming no service pack for now (SP zero?)
-
-       if flavor == "XP":
-          return "SP0", "/var/lib/cobbler/kickstarts/winxp-default.sif"
-
-   def match_kernelarch_file(self, filename):
-       return True

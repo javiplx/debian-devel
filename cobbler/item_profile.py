@@ -53,6 +53,7 @@ class Profile(item.Item):
         self.kernel_options_post       = ({},                                      '<<inherit>>')[is_subobject]
         self.ks_meta                   = ({},                                      '<<inherit>>')[is_subobject]
         self.template_files            = ({},                                      '<<inherit>>')[is_subobject]
+        self.virt_auto_boot            = (self.settings.virt_auto_boot,            '<<inherit>>')[is_subobject]
         self.virt_cpus                 = (1,                                       '<<inherit>>')[is_subobject]
         self.virt_file_size            = (self.settings.default_virt_file_size,    '<<inherit>>')[is_subobject]
         self.virt_ram                  = (self.settings.default_virt_ram,          '<<inherit>>')[is_subobject]
@@ -117,6 +118,7 @@ class Profile(item.Item):
         self.virt_type   = self.load_item(seed_data,'virt_type', self.settings.default_virt_type)
         self.virt_bridge = self.load_item(seed_data,'virt_bridge', self.settings.default_virt_bridge)        
         self.virt_cpus   = self.load_item(seed_data,'virt_cpus',1)
+        self.virt_auto_boot    = self.load_item(seed_data,'virt_auto_boot',self.settings.virt_auto_boot)
 
         # backwards compatibility -- convert string entries to dicts for storage
         if self.kernel_options != "<<inherit>>" and type(self.kernel_options) != dict:
@@ -132,6 +134,8 @@ class Profile(item.Item):
         self.set_owners(self.owners)
         self.set_mgmt_classes(self.mgmt_classes)
         self.set_template_files(self.template_files)
+        self.set_name_servers(self.name_servers)
+        self.set_name_servers_search(self.name_servers_search)
 
         self.uid         = self.load_item(seed_data,'uid','')
         if self.uid == '':
@@ -188,11 +192,15 @@ class Profile(item.Item):
 
     def set_name_servers(self,data):
         # FIXME: move to utils since shared with system
+        if data == "<<inherit>>":
+           data = []
         data = utils.input_string_or_list(data, delim=" ")
         self.name_servers = data
         return True
 
     def set_name_servers_search(self,data):
+        if data == "<<inherit>>":
+           data = []
         data = utils.input_string_or_list(data, delim=" ")
         self.name_servers_search = data
         return True
@@ -233,6 +241,9 @@ class Profile(item.Item):
             self.kickstart = kickstart
             return True
         raise CX(_("kickstart not found: %s") % kickstart)
+
+    def set_virt_auto_boot(self,num):
+        return utils.set_virt_auto_boot(self,num)
 
     def set_virt_cpus(self,num):
         return utils.set_virt_cpus(self,num)
@@ -303,6 +314,7 @@ class Profile(item.Item):
             'virt_ram'                 : self.virt_ram,
             'virt_bridge'              : self.virt_bridge,
             'virt_cpus'                : self.virt_cpus,
+            'virt_auto_boot'           : self.virt_auto_boot,
             'ks_meta'                  : self.ks_meta,
             'template_files'           : self.template_files,
             'repos'                    : self.repos,
@@ -351,6 +363,7 @@ class Profile(item.Item):
         buf = buf + _("repos                : %s\n") % self.repos
         buf = buf + _("server               : %s\n") % self.server
         buf = buf + _("template_files       : %s\n") % self.template_files
+        buf = buf + _("virt auto boot       : %s\n") % self.virt_auto_boot
         buf = buf + _("virt bridge          : %s\n") % self.virt_bridge
         buf = buf + _("virt cpus            : %s\n") % self.virt_cpus
         buf = buf + _("virt file size       : %s\n") % self.virt_file_size
@@ -372,6 +385,8 @@ class Profile(item.Item):
             'kopts'                    :  self.set_kernel_options,
             'kopts-post'               :  self.set_kernel_options_post,
             'kopts_post'               :  self.set_kernel_options_post,            
+            'virt-auto-boot'           :  self.set_virt_auto_boot,
+            'virt_auto_boot'           :  self.set_virt_auto_boot,            
             'virt-file-size'           :  self.set_virt_file_size,
             'virt_file_size'           :  self.set_virt_file_size,            
             'virt-ram'                 :  self.set_virt_ram,

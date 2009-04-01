@@ -4,11 +4,19 @@ Cobbler CHANGELOG
 - Development release start
 - (FEAT) network objects
 - (FEAT) better Ubuntu import support
+- (FEAT) add two new default flags to yum reposync (-m and -d) for grabbing comps automatically and also deleting duplicate RPMs
+- (FEAT) ongoing work contributed to improve Debian and Ubuntu support 
+- (FEAT) ability to toggle virt auto-boot on/off
+- (BUGF) validate gateway input against python-netaddr
+- (FEAT) --kopts="~foo" --in-place can be used to delete a hash entry without affecting the others, not to be confused with "!foo" to supress it.
 
-- Mon Mar 7 2009 - 1.6.0
+- Mon Mar 30 2009 - 1.6.2
+- (BUGF) Fix for cache cleanup problem in cobblerd 
+- (BUGF) various fixes to "cobbler report" when using non-standard formats
+
+- Fri Mar 27 2009 - 1.6.1
 - (FEAT) Improved anaconda monitoring code
-- (FEAT) preliminary linux-ris support for windows installs (WIP)
-- (FEAT) download comps.xml always
+- (FEAT) download comps.xml always (even if yum does not have the option)
 - (FEAT) performance upgrades for cobblerd service to avoid reloads
 - (FEAT) more code for s390 imports (WIP)
 - (BUGF) import works better with rawhide
@@ -31,7 +39,19 @@ Cobbler CHANGELOG
 - (BUGF) fix stderr output on Ctrl+C
 - (BUGF) potential performance savings WRT duplicate python objects
 - (BUGF) don't deserialize during sync, it makes it take twice as long
-- (FEAT) Ubuntu support
+- (FEAT) Ubuntu support for import (added/improved)
+- (BUGF) make DHCP managemnet work with bonding
+- (BUGF) teach serializer_catalog to fly with JSON
+- (BUGF) don't use yumdownloader when rpm_list is []
+- (BUGF) fix default kickstart location
+- (BUGF) properly "flatten" environment values for webapp
+- (BUGF) fix for MSIE rendering in web app
+- (BUGF) stop yumdownloader including system yum repos
+- (DOCS) update webui project page link
+- (BUGF) remove caching logic from remote.py
+- (FEAT) added --exclude-dns option to buildiso
+- (BUGF) fix string comparisons to tolerate unicode
+- (BUGF) fix dealing with name servers and name servers search, esp in web app
 
 - Tue Mar 3 2009 - 1.4.3
 - (BUGF) fix OMAPI support's (note: deprecated) usage of subprocess

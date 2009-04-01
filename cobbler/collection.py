@@ -106,6 +106,7 @@ class Collection(serializable.Serializable):
            'inherit'         : 'parent',
            'ip'              : 'ip_address',
            'mac'             : 'mac_address',
+           'virt-auto-boot'  : 'virt_auto_boot',
            'virt-file-size'  : 'virt_file_size',
            'virt-ram'        : 'virt_ram',
            'virt-path'       : 'virt_path',
@@ -168,6 +169,10 @@ class Collection(serializable.Serializable):
         of the object tree. 
         """
 
+        # Nothing to do when it is the same name
+        if newname == ref.name:
+            return True
+            
         # make a copy of the object, but give it a new name.
         oldname = ref.name
         newref = ref.make_clone()

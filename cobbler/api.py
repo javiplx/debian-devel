@@ -168,7 +168,7 @@ class BootAPI:
                 # if cobblerd is not running, no harm done, nothing to signal
                 pass
             else: 
-                raise CX("error contacting cobblerd")
+                raise
         return False
 
     def last_modified_time(self):
@@ -216,7 +216,6 @@ class BootAPI:
         if not extended:
             # for backwards compatibility and use with koan's comparisons
             elems = data["version_tuple"] 
-            print elems
             return int(elems[0]) + 0.1*int(elems[1]) + 0.001*int(elems[2])
         else:
             return data
@@ -711,10 +710,10 @@ class BootAPI:
         self.log("authorize",[user,resource,arg1,arg2,rc],debug=True)
         return rc
 
-    def build_iso(self,iso=None,profiles=None,systems=None,tempdir=None,distro=None,standalone=None,source=None):
+    def build_iso(self,iso=None,profiles=None,systems=None,tempdir=None,distro=None,standalone=None,source=None, exclude_dns=None):
         builder = action_buildiso.BuildIso(self._config)
         return builder.run(
-           iso=iso, profiles=profiles, systems=systems, tempdir=tempdir, distro=distro, standalone=standalone, source=source
+           iso=iso, profiles=profiles, systems=systems, tempdir=tempdir, distro=distro, standalone=standalone, source=source, exclude_dns=exclude_dns
         )
 
     def hardlink(self):

@@ -580,7 +580,7 @@ redhatmanagementserver"
        #set joined = " ".join($system.name_servers)
        <input type="text" size="255" style="width: 400px;" name="name_servers" id="name_servers" value="$joined" />
     #else
-       <input type="text" size="255" style="width: 400px;" name="name_servers" id="name_servers" value="<<inherit>>" />
+       <input type="text" size="255" style="width: 400px;" name="name_servers" id="name_servers" value="" />
     #end if
     <p class="context-tip">Name servers, space delimited, if not provided by DHCP</p>
     </td>
@@ -595,7 +595,7 @@ redhatmanagementserver"
        #set joined = " ".join($system.name_servers_search)
        <input type="text" size="255" style="width: 400px;" name="name_servers_search" id="name_servers_search" value="$joined" />
     #else
-       <input type="text" size="255" style="width: 400px;" name="name_servers_search" id="name_servers_search" value="<<inherit>>" />
+       <input type="text" size="255" style="width: 400px;" name="name_servers_search" id="name_servers_search" value="" />
     #end if
     <p class="context-tip">Name servers search path, space delimited, if not provided by DHCP</p>
     </td>
@@ -644,6 +644,18 @@ redhatmanagementserver"
     </td>
     </tr>
 
+    <tr>
+    <td class="virtedit">
+    <label for="virtautoboot">Virt AutoBoot</label>
+    </td>
+    <td class="virtedit">
+    <input type="text" size="5" style="width: 150px;" name="virtautoboot" id="virtautoboot"
+        #if $system
+           value="$system.virt_auto_boot"
+        #end if
+    />
+    <p class="context-tip">For virtual installs only, enable/disable VM autoboot.</p>
+    </td>
     <tr>
     <td class="virtedit">
     <label for="virttype">Virt Type</label>
@@ -818,14 +830,14 @@ redhatmanagementserver"
             #set inames = $system.interfaces.keys()
             #set nothing = $inames.sort()
             #for $iname in  $inames
-                <option name="$iname"
+                <option name="$iname" value="$iname"
                     #if $iname == "eth0"
                         selected="1"
                     #end if
                 >$iname</option>
             #end for
         #else
-            <option name="eth0" selected="1">eth0</option>
+            <option name="eth0" value="eth0" selected="1">eth0</option>
         #end if
     </select>
     <p class="context-tip">Select what interface to edit below</p>
